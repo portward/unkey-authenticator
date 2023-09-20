@@ -33,17 +33,10 @@ jobs:
       - name: Prepare Nix shell
         run: nix develop --impure .#${{ steps.shell.outputs.value }}
 
-      - name: Launch Docker Compose
-        run: docker compose up -d
-
       - name: Test
         run: nix develop --impure .#${{ steps.shell.outputs.value }} -c go test -race -v ./...
         env:
           CERBOS_ADDRESS: 127.0.0.1:3593
-
-      - name: Cleanup Docker Compose
-        run: docker compose down -v
-        if: always()
 
   lint:
     name: Lint

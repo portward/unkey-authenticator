@@ -1,4 +1,5 @@
 /.devenv/
 /.direnv/
+/.env
 /go.work
 /go.work.sum

@@ -1,6 +1,7 @@
 package unkeyauthenticator
 
 import (
+	"fmt"
 	"net/url"
 
 	"github.com/portward/registry-auth/auth"
@@ -10,7 +11,9 @@ import (
 //
 // [PasswordAuthenticatorFactory]: https://pkg.go.dev/github.com/portward/portward/config#PasswordAuthenticatorFactory
 type Config struct {
-	URL string `mapstructure:"url"`
+	APIID   string `mapstructure:"apiId"`
+	RootKey string `mapstructure:"rootKey"`
+	URL     string `mapstructure:"url"`
 }
 
 // New returns a new [Authenticator] from the configuration.
@@ -25,10 +28,18 @@ func (c Config) New() (auth.PasswordAuthenticator, error) {
 		return nil, err
 	}
 
-	return NewAuthenticator(apiURL), nil
+	return NewAuthenticator(c.APIID, c.RootKey, apiURL), nil
 }
 
 // Validate validates the configuration.
 func (c Config) Validate() error {
+	if c.APIID == "" {
+		return fmt.Errorf("unkey: API ID is required")
+	}
+
+	if c.RootKey == "" {
+		return fmt.Errorf("unkey: API ID is required")
+	}
+
 	return nil
 }

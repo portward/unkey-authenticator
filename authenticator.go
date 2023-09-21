@@ -19,6 +19,9 @@ var _ auth.PasswordAuthenticator = Authenticator{}
 //
 // [Unkey]: https://unkey.dev
 type Authenticator struct {
+	apiID   string
+	rootKey string
+
 	url *url.URL
 
 	// TODO: make client configurable
@@ -26,12 +29,14 @@ type Authenticator struct {
 }
 
 // NewAuthenticator returns a new [Authenticator].
-func NewAuthenticator(u *url.URL) Authenticator {
+func NewAuthenticator(apiID string, rootKey string, u *url.URL) Authenticator {
 	if u == nil {
 		u, _ = url.Parse("https://api.unkey.dev")
 	}
 
 	return Authenticator{
+		apiID:      apiID,
+		rootKey:    rootKey,
 		url:        u,
 		httpClient: http.DefaultClient,
 	}
@@ -70,6 +75,10 @@ func (a Authenticator) AuthenticatePassword(ctx context.Context, username string
 		return nil, err
 	}
 	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("unexpected response status: %s", resp.Status)
+	}
 
 	var apiResponse verifyKeyResponse
 	err = json.NewDecoder(resp.Body).Decode(&apiResponse)
@@ -130,4 +139,60 @@ func (s subject) Attribute(key string) (any, bool) {
 // Attributes implements auth.Subject.
 func (s subject) Attributes() map[string]any {
 	return maps.Clone(s.attrs)
+}
+
+func (a Authenticator) GetSubjectByID(ctx context.Context, id auth.SubjectID) (auth.Subject, error) {
+	query := url.Values{}
+	query.Add("ownerId", id.String())
+
+	u := *a.url
+	u.Path = fmt.Sprintf("/v1/apis/%s/keys", a.apiID)
+	u.RawQuery = query.Encode()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", a.rootKey))
+
+	resp, err := a.httpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("unexpected response status: %s", resp.Status)
+	}
+
+	var apiResponse listKeysResponse
+	err = json.NewDecoder(resp.Body).Decode(&apiResponse)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(apiResponse.Keys) == 0 {
+		// TODO: subject repository should probably return something like SubjectNotFound
+		return nil, auth.ErrAuthenticationFailed
+	}
+
+	// TODO: maybe check more than just the first key (eg. merge meta, check for expirations)
+
+	return subject{
+		id:    id,
+		attrs: apiResponse.Keys[0].Meta,
+	}, nil
+}
+
+type listKeysResponse struct {
+	Keys []listKeysKeyItem `json:"keys"`
+
+	// TODO: add support for rate limit
+}
+
+type listKeysKeyItem struct {
+	Meta map[string]any `json:"meta"`
+
+	// TODO: add support for rate limit
 }

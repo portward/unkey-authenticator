@@ -1,9 +1,9 @@
-module github.com/portward/unkey-authenticator
+module github.com/portward/unkey
 
 go 1.21.0
 
 require (
-	github.com/portward/registry-auth v0.0.1
+	github.com/portward/registry-auth v0.1.0
 	github.com/stretchr/testify v1.8.4
 )
 

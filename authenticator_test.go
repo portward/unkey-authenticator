@@ -1,4 +1,4 @@
-package unkeyauthenticator
+package unkey
 
 import (
 	"context"

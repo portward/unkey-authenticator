@@ -6,9 +6,9 @@ linters-settings:
     sections:
       - standard
       - default
-      - prefix(github.com/portward/unkey-authenticator)
+      - prefix(github.com/portward/unkey)
   goimports:
-    local-prefixes: github.com/portward/unkey-authenticator
+    local-prefixes: github.com/portward/unkey
   misspell:
     locale: US
   nolintlint:

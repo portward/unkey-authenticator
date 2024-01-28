@@ -3,7 +3,7 @@ module github.com/portward/unkey
 go 1.21.0
 
 require (
-	github.com/portward/registry-auth v0.3.0
+	github.com/portward/registry-auth v0.4.0
 	github.com/stretchr/testify v1.8.4
 )
 

@@ -4,7 +4,7 @@ go 1.21.0
 
 require (
 	github.com/portward/registry-auth v0.6.0
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.10.0
 )
 
 require (
